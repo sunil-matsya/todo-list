@@ -1,0 +1,381 @@
+/* 
+   CSS VARIABLES
+   -------------
+   Variables make it easy to change colors across the entire website later.
+   Usage: var(--variable-name)
+*/
+:root {
+    --primary-color: #6c5ce7;
+    /* Main interactive color (purple) */
+    --secondary-color: #a29bfe;
+    /* Lighter purple for gradients */
+    --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    /* Main page background */
+    --text-color: #2d3436;
+    /* Dark text for readability */
+    --light-text: #636e72;
+    /* Lighter text for subtitles */
+    --white: #ffffff;
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    /* Semi-transparent background for glassmorphism */
+    --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    /* Drop shadow for depth */
+}
+
+/* 
+   RESET
+   -----
+   Remove default browser margins and padding to have full control.
+   Use 'Outfit' font for a modern look.
+*/
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    /* Include padding in element width/height */
+    font-family: 'Outfit', sans-serif;
+}
+
+body {
+    background: var(--background-gradient);
+    /* Gradient background */
+    min-height: 100vh;
+    /* Full screen height */
+    display: flex;
+    /* Flexbox to center content */
+    justify-content: center;
+    /* Center horizontally */
+    align-items: center;
+    /* Center vertically */
+    padding: 20px;
+}
+
+/* 
+   MAIN CARD CONTAINER
+   -------------------
+   This is the main white card floating in the center.
+*/
+.container {
+    background: var(--glass-bg);
+    width: 100%;
+    max-width: 480px;
+    /* Maximum width on large screens */
+    padding: 2.5rem;
+    /* Inner spacing */
+    border-radius: 24px;
+    /* Rounded corners */
+    box-shadow: var(--shadow);
+    /* Drop shadow */
+    backdrop-filter: blur(8px);
+    /* Blur effect behind the card */
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    /* Subtle border */
+    transition: transform 0.3s ease;
+    /* Smooth hover animation */
+}
+
+.container:hover {
+    transform: translateY(-5px);
+    /* Lift up slightly when hovered */
+}
+
+header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+header h1 {
+    color: var(--text-color);
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 0.5rem;
+}
+
+header p {
+    color: var(--light-text);
+    font-size: 1rem;
+    opacity: 0.8;
+}
+
+/* INPUT GROUP (Text Box + Button) */
+.input-group {
+    display: flex;
+    /* Put input and button in a row */
+    gap: 12px;
+    /* Space between them */
+    margin-bottom: 2rem;
+}
+
+input[type="text"] {
+    flex: 1;
+    /* Take up all available space */
+    padding: 14px 18px;
+    border: 2px solid #e1e1e1;
+    border-radius: 14px;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s ease;
+    background: #f9f9f9;
+}
+
+input[type="text"]:focus {
+    border-color: var(--primary-color);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+}
+
+button#add-btn {
+    padding: 0 24px;
+    background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+    color: var(--white);
+    border: none;
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 6px rgba(108, 92, 231, 0.2);
+}
+
+button#add-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(108, 92, 231, 0.3);
+}
+
+button#add-btn:active {
+    transform: translateY(0);
+}
+
+/* TASK LIST */
+ul {
+    list-style: none;
+    /* Remove default bullets */
+}
+
+li {
+    background: var(--white);
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border: 1px solid transparent;
+    animation: slideIn 0.3s ease forwards;
+    /* Entry animation */
+}
+
+li:hover {
+    transform: translateX(5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    border-color: rgba(108, 92, 231, 0.1);
+}
+
+.task-text {
+    flex: 1;
+    font-size: 1.05rem;
+    color: var(--text-color);
+    margin-right: 15px;
+    word-break: break-word;
+    /* Prevent long words overflowing */
+}
+
+.task-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* BUTTONS (Edit / Delete) */
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.edit-btn {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.edit-btn:hover {
+    background: #ffeeba;
+    transform: scale(1.1);
+}
+
+.delete-btn {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.delete-btn:hover {
+    background: #f5c6cb;
+    transform: scale(1.1);
+}
+
+/* EDIT MODE STYLING */
+/* When editing, the list item looks active */
+li.editing {
+    background: #fff;
+    padding: 12px;
+    border: 2px solid var(--primary-color);
+}
+
+.edit-input {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+}
+
+/* ANIMATIONS */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* DATE STYLING */
+.task-date {
+    font-size: 0.75rem;
+    color: var(--light-text);
+    margin-right: 10px;
+    font-weight: 600;
+}
+
+/* COMPLETED TASK STYLING */
+li.completed {
+    opacity: 0.7;
+    /* Fade out completed tasks */
+    background: #f0f0f0;
+}
+
+li.completed .task-text {
+    text-decoration: line-through;
+    /* Strikethrough text */
+    color: #888;
+}
+
+/* CHECKBOX / STATUS BUTTON */
+.status-btn {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    margin-right: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    background: transparent;
+}
+
+li.completed .status-btn {
+    background: var(--primary-color);
+    /* Fill circle when complete */
+}
+
+li.completed .status-btn::after {
+    content: '✔';
+    /* Show checkmark when complete */
+    color: white;
+    font-size: 14px;
+}
+
+/* MODAL STYLING (The Custom Delete Box) */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    /* Dimmed background overlay */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.modal.hidden {
+    opacity: 0;
+    pointer-events: none;
+    /* Make click-through when hidden */
+}
+
+.modal-content {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 320px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+}
+
+.modal.hidden .modal-content {
+    transform: translateY(20px);
+    /* Slide down when hiding */
+}
+
+.modal h3 {
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.modal p {
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.modal-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.2s;
+}
+
+.modal-actions button:hover {
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: #f1f2f6;
+    color: var(--text-color);
+}
+
+.btn-danger {
+    background: #ff7675;
+    color: white;
+}

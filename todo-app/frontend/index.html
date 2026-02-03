@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List App</title>
+    <!-- Link to our CSS file for styling -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts: 'Outfit' for a modern look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Main Floating Container -->
+    <div class="container">
+        <!-- Header Section -->
+        <header>
+            <h1>My Tasks</h1>
+            <p>Get things done, one at a time.</p>
+        </header>
+
+        <!-- Input Section: To add new tasks -->
+        <div class="input-group">
+            <input type="text" id="todo-input" placeholder="Add a new task..." autofocus>
+            <button id="add-btn">Add</button>
+        </div>
+
+        <!-- List Section: Tasks will be dynamically inserted here by JavaScript -->
+        <ul id="todo-list">
+            <!-- Example: <li>Task...</li> -->
+        </ul>
+    </div>
+
+    <!-- Custom Delete Confirmation Modal (Hidden by default) -->
+    <div id="delete-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Delete Task</h3>
+            <p>Are you sure you want to delete this task?</p>
+            <div class="modal-actions">
+                <button id="cancel-delete" class="btn-secondary">No</button>
+                <button id="confirm-delete" class="btn-danger">Yes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link to our JavaScript file for logic -->
+    <script src="script.js"></script>
+</body>
+
+</html>
