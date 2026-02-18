@@ -1,381 +1,513 @@
-/* 
-   CSS VARIABLES
-   -------------
-   Variables make it easy to change colors across the entire website later.
-   Usage: var(--variable-name)
-*/
 :root {
-    --primary-color: #6c5ce7;
-    /* Main interactive color (purple) */
-    --secondary-color: #a29bfe;
-    /* Lighter purple for gradients */
-    --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    /* Main page background */
-    --text-color: #2d3436;
-    /* Dark text for readability */
-    --light-text: #636e72;
-    /* Lighter text for subtitles */
-    --white: #ffffff;
-    --glass-bg: rgba(255, 255, 255, 0.95);
-    /* Semi-transparent background for glassmorphism */
-    --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-    /* Drop shadow for depth */
+    /* Light Theme Variables */
+    --bg-color: #f0f4f8;
+    --sidebar-bg: #ffffff;
+    --text-color: #2d3748;
+    --text-secondary: #718096;
+    --accent-color: #4c6ef5;
+    --accent-hover: #3b5bdb;
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.3);
+
+    /* Priority Colors */
+    --priority-low: #38d9a9;
+    --priority-medium: #fab005;
+    --priority-high: #fa5252;
 }
 
-/* 
-   RESET
-   -----
-   Remove default browser margins and padding to have full control.
-   Use 'Outfit' font for a modern look.
-*/
+[data-theme="dark"] {
+    --bg-color: #1a202c;
+    --sidebar-bg: #2d3748;
+    --text-color: #f7fafc;
+    --text-secondary: #a0aec0;
+    --accent-color: #667eea;
+    --accent-hover: #5a67d8;
+    --card-bg: #2d3748;
+    --border-color: #4a5568;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    --glass-bg: rgba(26, 32, 44, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    /* Include padding in element width/height */
     font-family: 'Outfit', sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {
-    background: var(--background-gradient);
-    /* Gradient background */
-    min-height: 100vh;
-    /* Full screen height */
-    display: flex;
-    /* Flexbox to center content */
-    justify-content: center;
-    /* Center horizontally */
-    align-items: center;
-    /* Center vertically */
-    padding: 20px;
-}
-
-/* 
-   MAIN CARD CONTAINER
-   -------------------
-   This is the main white card floating in the center.
-*/
-.container {
-    background: var(--glass-bg);
-    width: 100%;
-    max-width: 480px;
-    /* Maximum width on large screens */
-    padding: 2.5rem;
-    /* Inner spacing */
-    border-radius: 24px;
-    /* Rounded corners */
-    box-shadow: var(--shadow);
-    /* Drop shadow */
-    backdrop-filter: blur(8px);
-    /* Blur effect behind the card */
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    /* Subtle border */
-    transition: transform 0.3s ease;
-    /* Smooth hover animation */
-}
-
-.container:hover {
-    transform: translateY(-5px);
-    /* Lift up slightly when hovered */
-}
-
-header {
-    text-align: center;
-    margin-bottom: 2.5rem;
-}
-
-header h1 {
+    background-color: var(--bg-color);
     color: var(--text-color);
-    font-size: 2.2rem;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    margin-bottom: 0.5rem;
+    height: 100vh;
+    overflow: hidden;
 }
 
-header p {
-    color: var(--light-text);
-    font-size: 1rem;
-    opacity: 0.8;
-}
-
-/* INPUT GROUP (Text Box + Button) */
-.input-group {
+.app-container {
     display: flex;
-    /* Put input and button in a row */
-    gap: 12px;
-    /* Space between them */
-    margin-bottom: 2rem;
+    height: 100vh;
 }
 
-input[type="text"] {
+/* --- SIDEBAR --- */
+.sidebar {
+    width: 250px;
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-color);
+    margin-bottom: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-menu {
     flex: 1;
-    /* Take up all available space */
-    padding: 14px 18px;
-    border: 2px solid #e1e1e1;
-    border-radius: 14px;
-    font-size: 1rem;
-    outline: none;
-    transition: all 0.3s ease;
-    background: #f9f9f9;
 }
 
-input[type="text"]:focus {
-    border-color: var(--primary-color);
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+.nav-title {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+    margin-bottom: 1rem;
+    margin-top: 1.5rem;
 }
 
-button#add-btn {
-    padding: 0 24px;
-    background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-    color: var(--white);
-    border: none;
-    border-radius: 14px;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 4px 6px rgba(108, 92, 231, 0.2);
-}
-
-button#add-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(108, 92, 231, 0.3);
-}
-
-button#add-btn:active {
-    transform: translateY(0);
-}
-
-/* TASK LIST */
-ul {
+.nav-menu ul {
     list-style: none;
-    /* Remove default bullets */
 }
 
-li {
-    background: var(--white);
-    padding: 16px;
-    margin-bottom: 12px;
-    border-radius: 14px;
+.nav-menu li {
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.nav-menu li:hover {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.nav-menu li.active {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+/* --- MAIN CONTENT --- */
+.main-content {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Header */
+.header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    border: 1px solid transparent;
-    animation: slideIn 0.3s ease forwards;
-    /* Entry animation */
 }
 
-li:hover {
-    transform: translateX(5px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-    border-color: rgba(108, 92, 231, 0.1);
+.header h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+#current-date {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.search-bar {
+    background-color: var(--card-bg);
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: var(--shadow);
+    width: 300px;
+}
+
+.search-bar input {
+    border: none;
+    background: transparent;
+    outline: none;
+    color: var(--text-color);
+    width: 100%;
+}
+
+.search-bar i {
+    color: var(--text-secondary);
+}
+
+/* Input Section */
+.input-card {
+    background-color: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.input-row {
+    display: flex;
+    gap: 1rem;
+}
+
+#task-input {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    outline: none;
+}
+
+#task-input:focus {
+    border-color: var(--accent-color);
+}
+
+#add-btn {
+    padding: 0 1.5rem;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#add-btn:hover {
+    background-color: var(--accent-hover);
+}
+
+.input-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.input-actions select,
+.input-actions input[type="date"] {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    outline: none;
+    cursor: pointer;
+}
+
+/* Tasks Section */
+.tasks-section {
+    flex: 1;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.task-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.task-item {
+    background-color: var(--card-bg);
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: grab;
+    border-left: 4px solid transparent;
+    /* For priority color */
+}
+
+.task-item.priority-high {
+    border-left-color: var(--priority-high);
+}
+
+.task-item.priority-medium {
+    border-left-color: var(--priority-medium);
+}
+
+.task-item.priority-low {
+    border-left-color: var(--priority-low);
+}
+
+.task-item.completed {
+    opacity: 0.6;
+}
+
+.task-item.completed .task-text {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+}
+
+.checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--accent-color);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+}
+
+.task-item.completed .checkbox {
+    background-color: var(--accent-color);
+    color: white;
+    font-size: 0.8rem;
+}
+
+.task-content {
+    flex: 1;
 }
 
 .task-text {
-    flex: 1;
-    font-size: 1.05rem;
-    color: var(--text-color);
-    margin-right: 15px;
-    word-break: break-word;
-    /* Prevent long words overflowing */
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.task-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.task-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
 }
 
 .task-actions {
     display: flex;
-    gap: 8px;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.2s;
 }
 
-/* BUTTONS (Edit / Delete) */
-.btn-icon {
-    width: 32px;
-    height: 32px;
+.task-item:hover .task-actions {
+    opacity: 1;
+}
+
+.action-btn {
+    background: none;
     border: none;
-    border-radius: 8px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    font-size: 0.9rem;
+    color: var(--text-secondary);
+    padding: 0.5rem;
+    border-radius: 6px;
 }
 
-.edit-btn {
-    background: #fff3cd;
-    color: #856404;
+.action-btn:hover {
+    background-color: var(--bg-color);
+    color: var(--accent-color);
 }
 
-.edit-btn:hover {
-    background: #ffeeba;
-    transform: scale(1.1);
+.action-btn.delete-btn:hover {
+    color: var(--priority-high);
 }
 
-.delete-btn {
-    background: #f8d7da;
-    color: #721c24;
+/* Empty State */
+.empty-state {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-top: 3rem;
 }
 
-.delete-btn:hover {
-    background: #f5c6cb;
-    transform: scale(1.1);
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
 }
 
-/* EDIT MODE STYLING */
-/* When editing, the list item looks active */
-li.editing {
-    background: #fff;
-    padding: 12px;
-    border: 2px solid var(--primary-color);
-}
-
-.edit-input {
-    width: 100%;
-    padding: 8px 12px;
-    font-size: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    outline: none;
-}
-
-/* ANIMATIONS */
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* DATE STYLING */
-.task-date {
-    font-size: 0.75rem;
-    color: var(--light-text);
-    margin-right: 10px;
-    font-weight: 600;
-}
-
-/* COMPLETED TASK STYLING */
-li.completed {
-    opacity: 0.7;
-    /* Fade out completed tasks */
-    background: #f0f0f0;
-}
-
-li.completed .task-text {
-    text-decoration: line-through;
-    /* Strikethrough text */
-    color: #888;
-}
-
-/* CHECKBOX / STATUS BUTTON */
-.status-btn {
-    width: 24px;
-    height: 24px;
-    border: 2px solid var(--primary-color);
-    border-radius: 50%;
-    margin-right: 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    background: transparent;
-}
-
-li.completed .status-btn {
-    background: var(--primary-color);
-    /* Fill circle when complete */
-}
-
-li.completed .status-btn::after {
-    content: '✔';
-    /* Show checkmark when complete */
-    color: white;
-    font-size: 14px;
-}
-
-/* MODAL STYLING (The Custom Delete Box) */
+/* Modals */
 .modal {
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    /* Dimmed background overlay */
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
     z-index: 1000;
+    align-items: center;
+    justify-content: center;
     backdrop-filter: blur(4px);
-    opacity: 1;
-    transition: opacity 0.3s ease;
-}
-
-.modal.hidden {
-    opacity: 0;
-    pointer-events: none;
-    /* Make click-through when hidden */
 }
 
 .modal-content {
-    background: var(--white);
+    background-color: var(--card-bg);
     padding: 2rem;
     border-radius: 16px;
-    width: 90%;
-    max-width: 320px;
-    text-align: center;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    transform: translateY(0);
-    transition: transform 0.3s ease;
-}
-
-.modal.hidden .modal-content {
-    transform: translateY(20px);
-    /* Slide down when hiding */
-}
-
-.modal h3 {
+    width: 400px;
+    max-width: 90%;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    position: relative;
     color: var(--text-color);
-    margin-bottom: 0.5rem;
 }
 
-.modal p {
-    color: var(--light-text);
+.close-modal {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.modal-title {
     margin-bottom: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    outline: none;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
 }
 
 .modal-actions {
     display: flex;
-    gap: 10px;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.modal-actions.center {
     justify-content: center;
 }
 
-.modal-actions button {
-    padding: 10px 20px;
-    border: none;
+.btn-cancel,
+.btn-save,
+.btn-danger {
+    padding: 0.75rem 1.5rem;
     border-radius: 8px;
+    border: none;
+    font-weight: 500;
     cursor: pointer;
-    font-weight: 600;
-    transition: transform 0.2s;
 }
 
-.modal-actions button:hover {
-    transform: translateY(-2px);
-}
-
-.btn-secondary {
-    background: #f1f2f6;
+.btn-cancel {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
     color: var(--text-color);
 }
 
-.btn-danger {
-    background: #ff7675;
+.btn-save {
+    background-color: var(--accent-color);
     color: white;
+}
+
+.btn-danger {
+    background-color: var(--priority-high);
+    color: white;
+}
+
+/* Theme Toggle */
+.theme-toggle .switch-label {
+    background-color: var(--card-bg);
+    /* Use card-bg instead of bg-color */
+    width: 60px;
+    height: 30px;
+    border-radius: 50px;
+    position: relative;
+    padding: 5px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+    /* Inset shadow for depth */
+}
+
+.theme-toggle i {
+    font-size: 14px;
+    z-index: 1;
+    /* Ensure icons are above text but below ball if needed */
+}
+
+.theme-toggle .fa-sun {
+    color: #f6e05e;
+    margin-left: 5px;
+}
+
+.theme-toggle .fa-moon {
+    color: #f1c40f;
+    margin-right: 5px;
+}
+
+.theme-toggle .ball {
+    background-color: #fff;
+    width: 24px;
+    height: 24px;
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    border-radius: 50%;
+    transition: transform 0.2s linear;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+#theme-switch {
+    display: none;
+}
+
+#theme-switch:checked+.switch-label .ball {
+    transform: translateX(30px);
 }

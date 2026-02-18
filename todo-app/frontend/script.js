@@ -1,296 +1,377 @@
-/**
- * FRONTEND LOGIC (script.js)
- * --------------------------
- * This file handles all the user interactions and connects the HTML to the Backend.
- * It uses the 'fetch' API to send requests to our Node.js/Express server.
- */
-
-// Define the API URL - where our backend server is listening
 const API_URL = 'http://localhost:3000/todos';
 
-// Select DOM elements so we can manipulate them
-const todoList = document.getElementById('todo-list');     // The <ul> list where tasks go
-const todoInput = document.getElementById('todo-input');   // The input box for new tasks
-const addBtn = document.getElementById('add-btn');         // The "Add" button
+// State
+let todos = [];
+let currentFilter = 'all'; // all, active, completed
+let currentCategory = 'all'; // all, Work, Personal, etc.
+let searchQuery = '';
 
-// --- MODAL ELEMENTS ---
+// DOM Elements
+const taskInput = document.getElementById('task-input');
+const categorySelect = document.getElementById('category-select');
+const prioritySelect = document.getElementById('priority-select');
+const dateSelect = document.getElementById('date-select');
+const addBtn = document.getElementById('add-btn');
+const todoList = document.getElementById('todo-list');
+const taskCount = document.getElementById('task-count');
+const emptyState = document.getElementById('empty-state');
+const searchInput = document.getElementById('search-input');
+const themeSwitch = document.getElementById('theme-switch');
+const currentDateEl = document.getElementById('current-date');
+const greetingEl = document.getElementById('greeting');
+
+// Modals
+const editModal = document.getElementById('edit-modal');
 const deleteModal = document.getElementById('delete-modal');
-const confirmDeleteBtn = document.getElementById('confirm-delete');
-const cancelDeleteBtn = document.getElementById('cancel-delete');
-let todoIdToDelete = null; // Store the ID of the todo we want to delete temporarily
+const editForm = document.getElementById('edit-form');
+let itemToDeleteId = null;
 
-/**
- * fetchTodos()
- * Fetches the list of todos from the backend and updates the UI.
- * This is an async function because fetching data takes time.
- */
+// Initialization
+document.addEventListener('DOMContentLoaded', () => {
+    fetchTodos();
+    setupEventListeners();
+    setupTheme();
+    updateDateAndGreeting();
+
+    // Initialize SortableJS for Drag and Drop
+    new Sortable(todoList, {
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        onEnd: function (evt) {
+            handleReorder();
+        }
+    });
+});
+
+function setupEventListeners() {
+    // Add Task
+    addBtn.addEventListener('click', addTask);
+    taskInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') addTask();
+    });
+
+    // Filtering & Categories
+    document.querySelectorAll('.nav-menu li[data-filter]').forEach(item => {
+        item.addEventListener('click', (e) => {
+            // Remove active class from all filters
+            document.querySelectorAll('.nav-menu li[data-filter]').forEach(li => li.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            currentFilter = e.currentTarget.dataset.filter;
+            // Reset category when clicking a main filter if desired, or keep both. 
+            // For this UI, let's say clicking a filter resets category highlight visually but we might want to combine them.
+            // Let's keep them separate logic: Main List vs Category List.
+            // If I click 'Work', I want to see all Work tasks.
+            // If I click 'Pending', I want pending tasks from ANY category.
+            // Let's make them mutually exclusive in UI focus for simplicity or combined.
+            // Complex app: Filter AND Category. 
+            // Simple app input: Sidebar implies one active view.
+
+            // Let's say: 
+            // Top list reset Category to 'all'.
+            currentCategory = 'all';
+            document.querySelectorAll('.nav-menu li[data-category]').forEach(li => li.classList.remove('active'));
+
+            renderTodos();
+        });
+    });
+
+    document.querySelectorAll('.nav-menu li[data-category]').forEach(item => {
+        item.addEventListener('click', (e) => {
+            document.querySelectorAll('.nav-menu li[data-category]').forEach(li => li.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+
+            // Visual feedback: uncheck top filters? Or keep 'All Tasks' active?
+            // Let's set main filter to 'all' so we see everything in this category
+            currentFilter = 'all';
+            document.querySelectorAll('.nav-menu li[data-filter]').forEach(li => li.classList.remove('active'));
+
+            currentCategory = e.currentTarget.dataset.category;
+            renderTodos();
+        });
+    });
+
+    // Search
+    searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value.toLowerCase();
+        renderTodos();
+    });
+
+    // Theme Toggle
+    themeSwitch.addEventListener('change', () => {
+        const theme = themeSwitch.checked ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    });
+
+    // Modals
+    document.querySelector('#edit-modal .close-modal').addEventListener('click', () => editModal.style.display = 'none');
+    document.getElementById('cancel-edit').addEventListener('click', () => editModal.style.display = 'none');
+
+    document.getElementById('cancel-delete').addEventListener('click', () => deleteModal.style.display = 'none');
+    document.getElementById('confirm-delete').addEventListener('click', confirmDeleteTask);
+
+    editForm.addEventListener('submit', handleEditSubmit);
+}
+
+function setupTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    themeSwitch.checked = savedTheme === 'dark';
+}
+
+function updateDateAndGreeting() {
+    const now = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    currentDateEl.textContent = now.toLocaleDateString('en-US', options);
+
+    const hour = now.getHours();
+    let greeting = 'Good Morning';
+    if (hour >= 12 && hour < 18) greeting = 'Good Afternoon';
+    else if (hour >= 18) greeting = 'Good Evening';
+
+    greetingEl.textContent = `${greeting}, User!`;
+}
+
+// --- API ACTIONS ---
+
 async function fetchTodos() {
     try {
-        // Send a GET request to the backend
-        const response = await fetch(API_URL);
-        // Parse the JSON response
-        const data = await response.json();
-        // Call renderTodos with the list of tasks from the database
-        renderTodos(data.data);
-    } catch (error) {
-        console.error('Error fetching todos:', error);
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        todos = data.data; // Backend returns { data: [...] }
+        renderTodos();
+    } catch (err) {
+        console.error('Error fetching todos:', err);
     }
 }
 
-/**
- * renderTodos(todos)
- * Takes an array of todo objects and builds the HTML for each one.
- * @param {Array} todos - List of tasks form database
- */
-function renderTodos(todos) {
-    todoList.innerHTML = ''; // Clear the current list before re-rendering
+async function addTask() {
+    const text = taskInput.value.trim();
+    if (!text) return;
 
-    todos.forEach(todo => {
-        // Create a new list item <li>
-        const li = document.createElement('li');
-        li.dataset.id = todo.id; // Store the ID for easy access
+    const newTask = {
+        task: text,
+        category: categorySelect.value,
+        priority: prioritySelect.value,
+        due_date: dateSelect.value || null
+    };
 
-        // Add 'completed' class if the task status is 'completed'
-        if (todo.status === 'completed') {
-            li.classList.add('completed');
-        }
+    try {
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newTask)
+        });
+        const data = await res.json();
 
-        // --- STATUS TOGGLE BUTTON ---
-        const statusBtn = document.createElement('div');
-        statusBtn.className = 'status-btn';
-        // Add click listener to toggle status
-        statusBtn.onclick = (e) => {
-            e.stopPropagation(); // Prevent triggering the row click
-            toggleStatus(todo.id, todo.status);
-        };
+        // Add to local state (at the top or where backend says? Backend returns full object)
+        // Adjust for sorting: newly added is usually top or bottom.
+        todos.unshift(data.data);
+        renderTodos();
 
-        // --- TASK CONTENT CONTAINER ---
-        const taskContent = document.createElement('div');
-        taskContent.style.flex = '1';
-        taskContent.style.display = 'flex';
-        taskContent.style.alignItems = 'center';
-
-        const taskText = document.createElement('span');
-        taskText.className = 'task-text';
-        taskText.textContent = todo.task;
-
-        // --- DATE DISPLAY ---
-        const dateObj = new Date(todo.created_at);
-        const dateStr = dateObj.toLocaleDateString(); // Format date nicely
-        const dateSpan = document.createElement('span');
-        dateSpan.className = 'task-date';
-        dateSpan.textContent = dateStr;
-
-        taskContent.appendChild(taskText);
-
-        // --- ACTION BUTTONS (Edit / Delete) ---
-        const actions = document.createElement('div');
-        actions.className = 'task-actions';
-        actions.style.display = 'flex';
-        actions.style.alignItems = 'center';
-
-        // Edit Button
-        const editBtn = document.createElement('button');
-        editBtn.className = 'btn-icon edit-btn';
-        editBtn.innerHTML = '✎';
-        editBtn.title = 'Edit';
-        editBtn.onclick = (e) => {
-            e.stopPropagation();
-            enableEdit(li, todo.id, todo.task); // Enter edit mode
-        };
-
-        // Delete Button
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn-icon delete-btn';
-        deleteBtn.innerHTML = '🗑';
-        deleteBtn.title = 'Delete';
-        deleteBtn.onclick = (e) => {
-            e.stopPropagation();
-            deleteTodo(todo.id); // Trigger delete modal
-        };
-
-        // Assemble the row
-        actions.appendChild(dateSpan);
-        actions.appendChild(editBtn);
-        actions.appendChild(deleteBtn);
-
-        li.appendChild(statusBtn);
-        li.appendChild(taskContent);
-        li.appendChild(actions);
-        todoList.appendChild(li); // Add to the <ul>
-
-        // Also allow clicking the text to edit
-        taskText.addEventListener('click', () => enableEdit(li, todo.id, todo.task));
-    });
+        // Reset Inputs
+        taskInput.value = '';
+    } catch (err) {
+        console.error('Error adding task:', err);
+        alert('Failed to add task');
+    }
 }
 
-/**
- * toggleStatus(id, currentStatus)
- * Switches a task between 'active' and 'completed'.
- */
 async function toggleStatus(id, currentStatus) {
     const newStatus = currentStatus === 'active' ? 'completed' : 'active';
     try {
-        await updateTodoStatus(id, newStatus);
-    } catch (error) {
-        console.error('Error toggling status:', error);
-    }
-}
-
-/**
- * updateTodoStatus(id, status)
- * Helper to send the PUT request for status updates.
- */
-async function updateTodoStatus(id, status) {
-    try {
         await fetch(`${API_URL}/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status })
+            body: JSON.stringify({ status: newStatus })
         });
-        fetchTodos(); // Refresh list
-    } catch (error) {
-        console.error('Error updating status:', error);
+
+        // Update local state
+        const task = todos.find(t => t.id === id);
+        if (task) task.status = newStatus;
+        renderTodos();
+    } catch (err) {
+        console.error('Error updating status:', err);
     }
 }
 
-/**
- * showDeleteModal(id)
- * Utility to show the custom delete modal.
- */
-function showDeleteModal(id) {
-    todoIdToDelete = id;
-    deleteModal.classList.remove('hidden'); // Remove 'hidden' class to show it
+// Delete Flow
+function openDeleteModal(id) {
+    itemToDeleteId = id;
+    deleteModal.style.display = 'flex';
 }
 
-/**
- * hideDeleteModal()
- * Utility to hide the delete modal.
- */
-function hideDeleteModal() {
-    todoIdToDelete = null;
-    deleteModal.classList.add('hidden'); // Add 'hidden' class to hide it
-}
-
-// --- DELETE MODAL EVENT LISTENERS ---
-
-// When user confirms delete
-confirmDeleteBtn.addEventListener('click', async () => {
-    if (todoIdToDelete) {
-        try {
-            await fetch(`${API_URL}/${todoIdToDelete}`, { method: 'DELETE' });
-            fetchTodos(); // Refresh list
-        } catch (error) {
-            console.error('Error deleting todo:', error);
-        }
-        hideDeleteModal();
-    }
-});
-
-// When user cancels delete
-cancelDeleteBtn.addEventListener('click', hideDeleteModal);
-
-// Close modal if user clicks outside the modal box
-deleteModal.addEventListener('click', (e) => {
-    if (e.target === deleteModal) hideDeleteModal();
-});
-
-function deleteTodo(id) {
-    showDeleteModal(id);
-}
-
-/**
- * enableEdit(li, id, currentTask)
- * Replace the task text with an input field for inline editing.
- */
-function enableEdit(li, id, currentTask) {
-    if (li.classList.contains('editing')) return; // Already editing
-
-    li.classList.add('editing');
-
-    // Create an input field
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.value = currentTask;
-    input.className = 'edit-input';
-
-    // Replace the <li> content with the input field temporarily
-    // Ideally we might want to hide elements instead of clearing innerHTML to be cleaner, 
-    // but for simplicity we replace content here.
-    li.innerHTML = '';
-    li.appendChild(input);
-    input.focus();
-
-    // Listen for keys: Enter -> Save, Escape -> Cancel
-    input.addEventListener('keydown', async (e) => {
-        if (e.key === 'Enter') {
-            await updateTodo(id, input.value);
-        } else if (e.key === 'Escape') {
-            fetchTodos(); // Re-fetch to cancel and restore view
-        }
-    });
-
-    // Save when the user clicks away (blur)
-    input.addEventListener('blur', async () => {
-        await updateTodo(id, input.value);
-    });
-}
-
-/**
- * updateTodo(id, newTask)
- * Sends PUT request to update task text.
- */
-async function updateTodo(id, newTask) {
-    if (!newTask.trim()) {
-        fetchTodos(); // Use fetchTodos to restore old task if input is empty
-        return;
-    }
+async function confirmDeleteTask() {
+    if (!itemToDeleteId) return;
 
     try {
-        await fetch(`${API_URL}/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ task: newTask })
-        });
-        fetchTodos();
-    } catch (error) {
-        console.error('Error updating todo:', error);
+        await fetch(`${API_URL}/${itemToDeleteId}`, { method: 'DELETE' });
+        todos = todos.filter(t => t.id !== itemToDeleteId);
+        renderTodos();
+        deleteModal.style.display = 'none';
+        itemToDeleteId = null;
+    } catch (err) {
+        console.error('Error deleting task:', err);
     }
 }
 
-/**
- * addTodo()
- * Reads input and sends POST request to create new task.
- */
-async function addTodo() {
-    const task = todoInput.value.trim();
+// Edit Flow
+function openEditModal(id) {
+    const task = todos.find(t => t.id === id);
     if (!task) return;
 
+    document.getElementById('edit-id').value = task.id;
+    document.getElementById('edit-task').value = task.task;
+    document.getElementById('edit-category').value = task.category || 'General';
+    document.getElementById('edit-priority').value = task.priority || 'medium';
+    document.getElementById('edit-status').value = task.status;
+
+    // Date needs formatting for input type="date"
+    if (task.due_date) {
+        document.getElementById('edit-date').value = new Date(task.due_date).toISOString().split('T')[0];
+    } else {
+        document.getElementById('edit-date').value = '';
+    }
+
+    editModal.style.display = 'flex';
+}
+
+async function handleEditSubmit(e) {
+    e.preventDefault();
+    const id = parseInt(document.getElementById('edit-id').value);
+    const updates = {
+        task: document.getElementById('edit-task').value,
+        category: document.getElementById('edit-category').value,
+        priority: document.getElementById('edit-priority').value,
+        due_date: document.getElementById('edit-date').value || null,
+        status: document.getElementById('edit-status').value
+    };
+
     try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
+        await fetch(`${API_URL}/${id}`, {
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ task })
+            body: JSON.stringify(updates)
         });
 
-        if (response.ok) {
-            todoInput.value = ''; // Clear input
-            fetchTodos();         // Refresh list
+        // Update local state
+        const idx = todos.findIndex(t => t.id === id);
+        if (idx !== -1) {
+            todos[idx] = { ...todos[idx], ...updates, id }; // update fields
         }
-    } catch (error) {
-        console.error('Error adding todo:', error);
+        renderTodos();
+        editModal.style.display = 'none';
+    } catch (err) {
+        console.error('Error editing task:', err);
     }
 }
 
-// --- GLOBAL EVENT LISTENERS ---
+async function handleReorder() {
+    // Get new order from DOM
+    const items = Array.from(todoList.children);
+    if (items.length === 0) return;
+    // exclude empty state if present
 
-// Add button click
-addBtn.addEventListener('click', addTodo);
+    const updates = items.map((item, index) => {
+        const id = item.dataset.id;
+        if (!id) return null; // skip empty state msg
+        return { id: parseInt(id), position: index };
+    }).filter(Boolean);
 
-// Enter key in main input
-todoInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') addTodo();
-});
+    if (updates.length === 0) return;
 
-// Load todos when page loads
-fetchTodos();
+    // Optimistically update local state positions logic if needed, 
+    // but typically we just wait for next fetch or assume success.
+
+    // Send to backend
+    try {
+        await fetch(`${API_URL}/reorder/batch`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ updates })
+        });
+        // Success silently
+    } catch (err) {
+        console.error('Error reordering:', err);
+        // Revert? (Complex, maybe just alert)
+    }
+}
+
+// --- RENDERING ---
+
+function renderTodos() {
+    todoList.innerHTML = '';
+
+    // Filter
+    let filtered = todos.filter(t => {
+        const matchesSearch = t.task.toLowerCase().includes(searchQuery);
+        const matchesFilter = currentFilter === 'all' || t.status === currentFilter;
+        const matchesCategory = currentCategory === 'all' || t.category === currentCategory;
+
+        return matchesSearch && matchesFilter && matchesCategory;
+    });
+
+    taskCount.textContent = filtered.length;
+
+    if (filtered.length === 0) {
+        emptyState.style.display = 'block';
+        return;
+    } else {
+        emptyState.style.display = 'none';
+    }
+
+    filtered.forEach(todo => {
+        const li = document.createElement('li');
+        li.className = `task-item priority-${todo.priority} ${todo.status === 'completed' ? 'completed' : ''}`;
+        li.dataset.id = todo.id;
+
+        // Format Date
+        let dateHtml = '';
+        if (todo.due_date) {
+            const d = new Date(todo.due_date);
+            dateHtml = `<span><i class="fa-regular fa-calendar"></i> ${d.toLocaleDateString()}</span>`;
+        }
+
+        const category = todo.category || 'General';
+
+        li.innerHTML = `
+            <div class="checkbox" onclick="window.toggleStatus(${todo.id}, '${todo.status}')">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <div class="task-content">
+                <div class="task-text">${escapeHtml(todo.task)}</div>
+                <div class="task-meta">
+                    <span class="badge" data-category="${category}"><i class="fa-solid fa-tag"></i> ${category}</span>
+                    ${dateHtml}
+                </div>
+            </div>
+            <div class="task-actions">
+                <button class="action-btn" onclick="window.openEditModal(${todo.id})">
+                    <i class="fa-solid fa-pen"></i>
+                </button>
+                <button class="action-btn delete-btn" onclick="window.openDeleteModal(${todo.id})">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+                <button class="action-btn handle">
+                    <i class="fa-solid fa-grip-vertical"></i>
+                </button>
+            </div>
+        `;
+        todoList.appendChild(li);
+    });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// Expose functions to global scope for HTML onclick attributes
+window.toggleStatus = toggleStatus;
+window.openEditModal = openEditModal;
+window.openDeleteModal = openDeleteModal;

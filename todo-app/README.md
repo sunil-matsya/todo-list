@@ -37,7 +37,7 @@ A full-stack Todo List application built with Node.js, Express, MySQL, and Vanil
 
 2.  **Setup Database**
     - Ensure your local MySQL server is running.
-    - The application expects a user `root` with password `sunil123`.
+    - The application expects a user `root` with password `****`.
     - *Note: You can change these credentials in `backend/server.js`.*
     - The database `todo_db` and table `todos` will be created automatically when you start the server.
 
@@ -95,4 +95,4 @@ todo-app/
 
 ---
 
-Made with ❤️ by Pivotr Internship Team
+
