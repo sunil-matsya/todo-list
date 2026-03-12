@@ -5,12 +5,15 @@ A full-stack Todo List application built with Node.js, Express, MySQL, and Vanil
 ## ✨ Features
 
 - **CRUD Operations**: Create, Read, Update, and Delete tasks.
+- **Authentication**: JWT-based user authentication and registration.
+- **Author Isolation**: Users can only manage their own tasks.
 - **Task Status**: Mark tasks as "Active" or "Completed" with visual indicators.
 - **Date Tracking**: Automatically records and displays the date each task was created.
 - **Custom UI**:
     - Glassmorphism design aesthetics.
     - Custom styled checkboxes.
     - Custom modal for delete confirmation (no default browser alerts).
+    - Integrated Login and Register UI.
 - **Persistent Storage**: All data is stored securely in a local MySQL database.
 
 ## 🛠 Tech Stack
@@ -18,7 +21,8 @@ A full-stack Todo List application built with Node.js, Express, MySQL, and Vanil
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
 - **Backend**: Node.js, Express.js
 - **Database**: MySQL
-- **Dependencies**: `mysql2`, `cors`, `express`
+- **Security**: jsonwebtoken (JWT), bcrypt
+- **Dependencies**: `mysql2`, `cors`, `express`, `jsonwebtoken`, `bcrypt`
 
 ## 🚀 Getting Started
 
@@ -37,9 +41,9 @@ A full-stack Todo List application built with Node.js, Express, MySQL, and Vanil
 
 2.  **Setup Database**
     - Ensure your local MySQL server is running.
-    - The application expects a user `root` with password `****`.
+    - The application expects a user `root` with password `sunil123`.
     - *Note: You can change these credentials in `backend/server.js`.*
-    - The database `todo_db` and table `todos` will be created automatically when you start the server.
+    - The database `todo_db` and tables `users` & `todos` will be created automatically when you start the server.
 
 3.  **Install Backend Dependencies**
     ```bash
@@ -65,10 +69,11 @@ todo-app/
 │
 ├── backend/                # Server-side code
 │   ├── node_modules/       # Project dependencies (hidden)
-│   ├── package.json        # Defines backend dependencies (express, mysql2, cors)
+│   ├── package.json        # Defines backend dependencies (express, mysql2, cors, jsonwebtoken, bcrypt)
 │   └── server.js           # Main server file:
 │                           # - Connects to MySQL
 │                           # - Initializes database schema
+│                           # - Handles Authentication (JWT, bcrypt)
 │                           # - Defines API endpoints (GET, POST, PUT, DELETE)
 │
 ├── frontend/               # Client-side code
@@ -86,12 +91,16 @@ todo-app/
 
 ## 🔗 API Endpoints
 
-| Method | Endpoint      | Description                     | Body Parameters |
-| :----- | :------------ | :------------------------------ | :-------------- |
-| GET    | `/todos`      | Fetch all tasks                 | -               |
-| POST   | `/todos`      | Create a new task               | `{ "task": "..." }` |
-| PUT    | `/todos/:id`  | Update task text or status      | `{ "task": "...", "status": "..." }` |
-| DELETE | `/todos/:id`  | Delete a specific task          | -               |
+| Method | Endpoint      | Description                     | Auth Required | Body Parameters |
+| :----- | :------------ | :------------------------------ | :------------ | :-------------- |
+| POST   | `/register`   | Register a new user             | No            | `{ "username": "...", "password": "..." }` |
+| POST   | `/login`      | Authenticate and get JWT        | No            | `{ "username": "...", "password": "..." }` |
+| GET    | `/todos`      | Fetch all tasks for user        | Yes           | -               |
+| POST   | `/todos`      | Create a new task               | Yes           | `{ "task": "..." }` |
+| PUT    | `/todos/:id`  | Update task text or status      | Yes           | `{ "task": "...", "status": "..." }` |
+| DELETE | `/todos/:id`  | Delete a specific task          | Yes           | -               |
+
+> **Note**: For endpoints requiring authentication, you must pass the JWT in the `Authorization` header as `Bearer <token>`.
 
 ---
 

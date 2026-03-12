@@ -1,12 +1,24 @@
 const API_URL = 'http://localhost:3000/todos';
+const AUTH_URL = 'http://localhost:3000';
 
 // State
 let todos = [];
 let currentFilter = 'all'; // all, active, completed
 let currentCategory = 'all'; // all, Work, Personal, etc.
 let searchQuery = '';
+let currentToken = localStorage.getItem('token');
+let currentUsername = localStorage.getItem('username');
 
 // DOM Elements
+const authContainer = document.getElementById('auth-container');
+const appContainer = document.getElementById('app-container');
+const loginForm = document.getElementById('login-form');
+const registerForm = document.getElementById('register-form');
+const tabLogin = document.getElementById('tab-login');
+const tabRegister = document.getElementById('tab-register');
+const logoutBtn = document.getElementById('logout-btn');
+const authError = document.getElementById('auth-error');
+
 const taskInput = document.getElementById('task-input');
 const categorySelect = document.getElementById('category-select');
 const prioritySelect = document.getElementById('priority-select');
@@ -28,10 +40,15 @@ let itemToDeleteId = null;
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
-    fetchTodos();
     setupEventListeners();
     setupTheme();
     updateDateAndGreeting();
+
+    if (currentToken) {
+        showApp();
+    } else {
+        showAuth();
+    }
 
     // Initialize SortableJS for Drag and Drop
     new Sortable(todoList, {
@@ -111,6 +128,27 @@ function setupEventListeners() {
     document.getElementById('confirm-delete').addEventListener('click', confirmDeleteTask);
 
     editForm.addEventListener('submit', handleEditSubmit);
+
+    // Auth Event Listeners
+    tabLogin.addEventListener('click', () => {
+        tabLogin.classList.add('active');
+        tabRegister.classList.remove('active');
+        loginForm.style.display = 'flex';
+        registerForm.style.display = 'none';
+        authError.textContent = '';
+    });
+
+    tabRegister.addEventListener('click', () => {
+        tabRegister.classList.add('active');
+        tabLogin.classList.remove('active');
+        registerForm.style.display = 'flex';
+        loginForm.style.display = 'none';
+        authError.textContent = '';
+    });
+
+    loginForm.addEventListener('submit', handleLogin);
+    registerForm.addEventListener('submit', handleRegister);
+    logoutBtn.addEventListener('click', logout);
 }
 
 function setupTheme() {
@@ -132,12 +170,97 @@ function updateDateAndGreeting() {
     greetingEl.textContent = `${greeting}, User!`;
 }
 
+// --- AUTH ACTIONS ---
+function showAuth() {
+    authContainer.style.display = 'flex';
+    appContainer.style.display = 'none';
+}
+
+function showApp() {
+    authContainer.style.display = 'none';
+    appContainer.style.display = 'flex';
+    greetingEl.textContent = `Hello, ${currentUsername || 'User'}!`;
+    fetchTodos();
+}
+
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    currentToken = null;
+    currentUsername = null;
+    todos = [];
+    showAuth();
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+    authError.textContent = '';
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    try {
+        const res = await fetch(`${AUTH_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        currentToken = data.token;
+        currentUsername = data.username;
+        localStorage.setItem('token', currentToken);
+        localStorage.setItem('username', currentUsername);
+        showApp();
+    } catch (err) {
+        authError.textContent = err.message;
+    }
+}
+
+async function handleRegister(e) {
+    e.preventDefault();
+    authError.textContent = '';
+    const username = document.getElementById('register-username').value.trim();
+    const password = document.getElementById('register-password').value;
+    try {
+        const res = await fetch(`${AUTH_URL}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        // After register, auto login or ask to login
+        tabLogin.click();
+        document.getElementById('login-username').value = username;
+        document.getElementById('login-password').value = password;
+        authError.textContent = 'Registration successful, please login.';
+        authError.style.color = 'var(--priority-low)';
+    } catch (err) {
+        authError.textContent = err.message;
+        authError.style.color = 'var(--priority-high)';
+    }
+}
+
+// API Helper
+async function apiFetch(url, options = {}) {
+    if (!currentToken) throw new Error('Unauthorized');
+    const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${currentToken}`,
+        ...options.headers
+    };
+    const res = await fetch(url, { ...options, headers });
+    if (res.status === 401 || res.status === 403) {
+        logout();
+        throw new Error('Unauthorized');
+    }
+    return res.json();
+}
+
 // --- API ACTIONS ---
 
 async function fetchTodos() {
     try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
+        const data = await apiFetch(API_URL);
         todos = data.data; // Backend returns { data: [...] }
         renderTodos();
     } catch (err) {
@@ -157,12 +280,10 @@ async function addTask() {
     };
 
     try {
-        const res = await fetch(API_URL, {
+        const data = await apiFetch(API_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newTask)
         });
-        const data = await res.json();
 
         // Add to local state (at the top or where backend says? Backend returns full object)
         // Adjust for sorting: newly added is usually top or bottom.
@@ -180,9 +301,8 @@ async function addTask() {
 async function toggleStatus(id, currentStatus) {
     const newStatus = currentStatus === 'active' ? 'completed' : 'active';
     try {
-        await fetch(`${API_URL}/${id}`, {
+        await apiFetch(`${API_URL}/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: newStatus })
         });
 
@@ -205,7 +325,7 @@ async function confirmDeleteTask() {
     if (!itemToDeleteId) return;
 
     try {
-        await fetch(`${API_URL}/${itemToDeleteId}`, { method: 'DELETE' });
+        await apiFetch(`${API_URL}/${itemToDeleteId}`, { method: 'DELETE' });
         todos = todos.filter(t => t.id !== itemToDeleteId);
         renderTodos();
         deleteModal.style.display = 'none';
@@ -248,9 +368,8 @@ async function handleEditSubmit(e) {
     };
 
     try {
-        await fetch(`${API_URL}/${id}`, {
+        await apiFetch(`${API_URL}/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updates)
         });
 
@@ -285,9 +404,8 @@ async function handleReorder() {
 
     // Send to backend
     try {
-        await fetch(`${API_URL}/reorder/batch`, {
+        await apiFetch(`${API_URL}/reorder/batch`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ updates })
         });
         // Success silently
